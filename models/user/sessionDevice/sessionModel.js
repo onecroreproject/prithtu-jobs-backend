@@ -1,0 +1,53 @@
+const mongoose = require("mongoose");
+const {jobDB}=require("../../../database");
+const dbTimer = require("../../../middlewares/dbTimer");
+
+
+
+const SessionSchema = new mongoose.Schema({
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    deviceId: {
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: "Device",
+      required: true,
+    },
+    refreshToken: {
+      type: String,
+      required: true,
+    },
+    isOnline: {
+      type: Boolean,
+      default: false,
+    },
+    lastSeenAt: {
+      type: Date,
+      default: null,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+    expiredAt: {
+      type: Date,
+      default: null, // optional, can set based on refreshToken expiry
+    },
+  },
+  { timestamps: true } // adds updatedAt automatically
+);
+SessionSchema.plugin(dbTimer);
+
+// Index for auto-expiry (if refreshToken has TTL)
+SessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 },{_id:1});
+
+
+module.exports =  mongoose.models.Session || jobDB.model("Session", SessionSchema,"Session");
+
+
+
+
+
+
